@@ -1,0 +1,62 @@
+
+CREATE TABLE IF NOT EXISTS `Entity`(
+`entity_id` INT UNSIGNED AUTO_INCREMENT,
+`entity_name` VARCHAR(300) NOT NULL,
+`modify_time` DATETIME NOT NULL,
+`delete_time` DATETIME NULL, 
+PRIMARY KEY ( `entity_id` ),
+UNIQUE (`entity_name`) 
+) ENGINE=INNODB DEFAULT CHARSET=utf8;
+
+
+
+
+
+CREATE TABLE IF NOT EXISTS `Company`(
+`company_id` INT UNSIGNED AUTO_INCREMENT,
+`company_name` VARCHAR(300) NOT NULL,
+`category` VARCHAR(100) NOT NULL DEFAULT 'un',
+`entity_id` INT UNSIGNED NULL,
+`address_line1` VARCHAR(100) NULL,
+`address_line2` VARCHAR(100) NULL,
+`address_line3` VARCHAR(100) NULL,
+`sub` VARCHAR(25) NULL,
+`state` VARCHAR(10) NULL,
+`postcode` VARCHAR(10) NOT NULL,
+`lat`  VARCHAR(30) NULL,
+`lng`  VARCHAR(30) NULL, 
+`phone` VARCHAR(200) NULL, 
+`fax` VARCHAR(200) NULL, 
+`website` VARCHAR(300) NULL, 
+`email` VARCHAR(200) NULL, 
+`reg_number` VARCHAR(100) NULL,
+`contact_person` VARCHAR(100) NULL,
+`key_project` text NULL, 
+`award` text NULL, 
+`comment` text NULL,
+`modify_time` datetime Not NULL, 
+`delete_time` datetime NULL, 
+PRIMARY KEY ( `company_id` ),
+FOREIGN KEY (`entity_id`) REFERENCES `Entity` (`entity_id`) ON UPDATE CASCADE ON DELETE RESTRICT,
+INDEX (`company_name`) 
+) ENGINE=INNODB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE IF NOT EXISTS `People`(
+`people_id` INT UNSIGNED AUTO_INCREMENT,
+`full_name` VARCHAR(100) NOT NULL, 
+`family_name` VARCHAR(50) NOT NULL, 
+`last_name` VARCHAR(50) NOT NULL,
+`entity_id` INT UNSIGNED,
+`position` VARCHAR(200) NULL,
+`phone` VARCHAR(200) NULL, 
+`email` VARCHAR(300) NULL,  
+`modify_time` DATETIME NOT NULL,
+`delete_time` DATETIME NULL, 
+PRIMARY KEY ( `people_id` ), 
+FOREIGN KEY (`entity_id`) REFERENCES `Entity` (`entity_id`) ON UPDATE CASCADE ON DELETE RESTRICT,
+INDEX (`full_name`) 
+) ENGINE=INNODB DEFAULT CHARSET=utf8;
+
+
+
