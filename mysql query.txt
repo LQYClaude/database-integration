@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS `People`(
 `position` VARCHAR(200) NULL,
 `phone` VARCHAR(200) NULL, 
 `email` VARCHAR(300) NULL,  
+`comment` text NULL,
 `modify_time` DATETIME NOT NULL,
 `delete_time` DATETIME NULL, 
 PRIMARY KEY ( `people_id` ), 

@@ -32,8 +32,8 @@ class sqlpool():
         self.conn = pymysql.connect(user=user, 
                                     password=password,
                                     host=host,
-                                    database=database)
-                                     #ssl={'ssl': {'ca': '/var/www/html/BaltimoreCyberTrustRoot.crt.pem'}}
+                                    database=database,
+                                    ssl={'ssl': {'ca': '/var/www/html/BaltimoreCyberTrustRoot.crt.pem'}})
         self.cursor = self.conn.cursor()
         self.saved_name = {}
         self.saved_entity = {}
@@ -89,7 +89,6 @@ class sqlpool():
             print(e)
             print('Company name insert failed.')
             return None
-        self.lock.release()
     
     # Search entity name
     def search_entity(self, name):
@@ -119,7 +118,6 @@ class sqlpool():
             print(e)
             print('Entity name insert failed.')
             return None
-        self.lock.release
 
     def commit(self, sql):
         self.lock.acquire()
@@ -130,7 +128,6 @@ class sqlpool():
         except pymysql.InternalError as e:
             self.lock.release()
             print(e)
-        self.lock.release()
 
     def close(self):
         self.cursor.close()
@@ -140,7 +137,7 @@ class sqlpool():
 # Use Google map getting correct address
 def getGeoForAddress(address, name):
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36"}
-    url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + address.replace(' ','%20').encode('ascii', 'ignore').decode() + '|country:AU&key=[your key]'
+    url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + address.replace(' ','%20').encode('ascii', 'ignore').decode() + '|country:AU&key=\'
     req = urllib.request.Request(url = url, headers = headers)
     response = urlopen(req).read()
     responseJson = json.loads(response)
@@ -180,7 +177,7 @@ def getGeoForAddress(address, name):
     # Plan B
     if postcode == '':
         print('Plan A failed.')
-        url2 = 'https://maps.googleapis.com/maps/api/place/textsearch/json?query=' + name.replace(' ','%20').encode('ascii', 'ignore').decode() + '&country:AU&key=[your key]'
+        url2 = 'https://maps.googleapis.com/maps/api/place/textsearch/json?query=' + name.replace(' ','%20').encode('ascii', 'ignore').decode() + '&country:AU&key=\'
         req2 = urllib.request.Request(url = url2, headers = headers)
         response = urlopen(req2).read()
         responseJson = json.loads(response)
@@ -230,6 +227,8 @@ def read_excel(file,default,heads,address,comments,first_line,db):
         for c in range(1, col_num+1):
             if sheet1.cell(r, c).value is None:
                 sheet1.cell(r, c, '')
+            #else:
+                #sheet1.cell(r, c).value.replace('\\','').replace('"',"'")
 
     #recognize heads
     i=1
@@ -299,23 +298,25 @@ def read_excel(file,default,heads,address,comments,first_line,db):
         print('Row '+str(r)+' , Company name: '+str(sheet1.cell(r,heads[0]).value).strip())
         if str(sheet1.cell(r,heads[0]).value).strip() != '':
             detail = copy.copy(default)
+
+            # Read company name and entity name
             if str(sheet1.cell(r,heads[0]).value).lower().find('pty') != -1:
-                detail[0] = str(sheet1.cell(r,heads[0]).value)[0:str(sheet1.cell(r,heads[0]).value).lower().find('pty')].replace('"','').strip()
+                detail[0] = str(sheet1.cell(r,heads[0]).value)[0:str(sheet1.cell(r,heads[0]).value).lower().find('pty')].strip()
                 detail[2] = detail[0]+' PTY LTD'
             elif str(sheet1.cell(r,heads[0]).value).lower().find('p/') != -1:
-                detail[0] = str(sheet1.cell(r,heads[0]).value)[0:str(sheet1.cell(r,heads[0]).value).lower().find('p/')].replace('"','').strip()
+                detail[0] = str(sheet1.cell(r,heads[0]).value)[0:str(sheet1.cell(r,heads[0]).value).lower().find('p/')].strip()
                 detail[2] = detail[0]+' PTY LTD'
             else:
-                detail[0] = str(sheet1.cell(r,heads[0]).value).replace('"','').strip()
-            if heads[1] > 0 and str(sheet1.cell(r,heads[1]).value).strip()!='':
-                detail[1] = str(sheet1.cell(r,heads[1]).value).replace('"','').strip()
-            if head[2]>0  and str(sheet1.cell(r,heads[2]).value).strip()!='':
+                detail[0] = str(sheet1.cell(r,heads[0]).value).strip()
+            if heads[2]>0  and str(sheet1.cell(r,heads[2]).value).strip()!='':
                 if str(sheet1.cell(r,heads[2]).value).lower().find('pty') != -1:
-                    detail[2] = str(sheet1.cell(r,heads[2]).value)[0:str(sheet1.cell(r,heads[2]).value).lower().find('pty')].replace('"','').strip()+' PTY LTD'
+                    detail[2] = str(sheet1.cell(r,heads[2]).value)[0:str(sheet1.cell(r,heads[2]).value).lower().find('pty')].strip()+' PTY LTD'
                 elif str(sheet1.cell(r,heads[2]).value).lower().find('p/') != -1:
-                    detail[2] = str(sheet1.cell(r,heads[2]).value)[0:str(sheet1.cell(r,heads[2]).value).lower().find('p/')].replace('"','').strip()+' PTY LTD'
+                    detail[2] = str(sheet1.cell(r,heads[2]).value)[0:str(sheet1.cell(r,heads[2]).value).lower().find('p/')].strip()+' PTY LTD'
                 else:
-                    detail[2] = str(sheet1.cell(r,heads[2]).value).replace('"','').strip()+' PTY LTD'
+                    detail[2] = str(sheet1.cell(r,heads[2]).value).strip()+' PTY LTD'
+
+            # Address combination
             if heads[3] > 0:
                 addressline=''
                 for c in address:
@@ -336,27 +337,22 @@ def read_excel(file,default,heads,address,comments,first_line,db):
                     detail[8] = addressbag[5]
                     detail[9] = str(addressbag[6])
                     detail[10] = str(addressbag[7])
-            if heads[4] > 0 and str(sheet1.cell(r,heads[4]).value).strip()!='':
-                detail[11] = str(sheet1.cell(r,heads[4]).value).strip().split(',')[0].split('/')[0].split(';')[0].replace('"','')
-            if heads[5] > 0 and str(sheet1.cell(r,heads[5]).value).strip()!='':
-                detail[12] = str(sheet1.cell(r,heads[5]).value).strip().split(',')[0].split('/')[0].split(';')[0].replace('"','')
-            if heads[6] > 0 and str(sheet1.cell(r,heads[6]).value).strip()!='':
-                detail[13] = str(sheet1.cell(r,heads[6]).value).strip().replace('"','')
-            if heads[7] > 0 and str(sheet1.cell(r,heads[7]).value).strip()!='':
-                detail[14] = str(sheet1.cell(r,heads[7]).value).strip().split(',')[0].split('/')[0].split(';')[0].replace('"','')
-            if heads[8] > 0 and str(sheet1.cell(r,heads[8]).value).strip()!='':
-                detail[15] = str(sheet1.cell(r,heads[8]).value).strip().replace('"','')
-            if heads[9] > 0 and str(sheet1.cell(r,heads[9]).value).strip()!='':
-                detail[16] = str(sheet1.cell(r,heads[9]).value).strip().replace('"','')
-            if heads[10] > 0 and str(sheet1.cell(r,heads[10]).value).strip()!='':
-                detail[17] = str(sheet1.cell(r,heads[10]).value).replace('"','').strip().replace('"','')
-            if heads[11] > 0 and str(sheet1.cell(r,heads[11]).value).strip()!='':
-                detail[18] = str(sheet1.cell(r,heads[11]).value).replace('"','').strip().replace('"','')
+
+            # Define type
+            if heads[1] > 0 and str(sheet1.cell(r,heads[1]).value).strip()!='':
+                detail[1] = str(sheet1.cell(r,heads[1]).value).strip()
+
+            for i in [4,5,7]:
+                if heads[i] > 0 and str(sheet1.cell(r,heads[i]).value).strip()!='':
+                    detail[i+7] = str(sheet1.cell(r,heads[i]).value).strip().split(',')[0].split('/')[0].split(';')[0]
+            for i in [6,8,9,10,11]:
+                if heads[i] > 0 and str(sheet1.cell(r,heads[i]).value).strip()!='':
+                    detail[i+7] = str(sheet1.cell(r,heads[i]).value).strip()
             if heads[12] > 0:
                 comment=''
                 for com in comments:
                     if str(sheet1.cell(r,com).value).strip() != '': comment+=' '+str(sheet1.cell(1,com).value).strip()+': '+str(sheet1.cell(r,com).value).strip()+' ---'
-                detail[19] = comment.replace('"','').strip()
+                detail[19] = comment.strip()
             if detail[8] != None: 
                 success = database_update(detail,db)
                 if success == 0: insert_num+=1
@@ -392,7 +388,7 @@ def database_update(item,db):
 
         olddata=db.get_stored_name(exist_name_id)
         sql='UPDATE Company SET '
-        if item[1] != None and olddata[2]=='un':
+        if item[1] != 'un' and olddata[2]=='un':
             sql += company_heads[1]+'="'+item[1]+'", '
         if item[2] != None and olddata[3]==None:
             entity_id = db.search_entity(item[2])
@@ -445,11 +441,10 @@ if __name__=='__main__':
     start = time.time()
 
     #set default data
-    file = 'D:\excel\Builders_plumbers_20191118 09-20-38.xlsx'
-    #file = 'D:\excel\builder list 2019-11-18.xlsx'
+    file = 
     default = [None # 'company_name'
-               ,None # 'type'
-               ,None # 'brand'
+               ,'un' # 'type'
+               ,None # 'entity'
                ,None # 'address_line1'
                ,None # 'address_line2'
                ,None # 'address_line3'
@@ -487,10 +482,10 @@ if __name__=='__main__':
     comments = [] # Set useful comment col
     start_line = 2
 
-    user='root' 
-    password='claude@1698774'
-    host='localhost' 
-    database='[db name]'
+    user='root' #
+    password=
+    host='localhost' # 
+    database=
     try:
         db = sqlpool(user,password,host,database)
         db.conn
@@ -499,6 +494,13 @@ if __name__=='__main__':
     except pymysql.Error as err:
         print(err)
         print('Connect database failed.')
+    db.commit('drop table people;')
+    db.commit('CREATE TABLE IF NOT EXISTS `Entity`(`entity_id` INT UNSIGNED AUTO_INCREMENT, `entity_name` VARCHAR(300) NOT NULL, `modify_time` DATETIME NOT NULL, `delete_time` DATETIME NULL,  PRIMARY KEY ( `entity_id` ), UNIQUE (`entity_name`)  ) ENGINE=INNODB DEFAULT CHARSET=utf8;')
+    db.commit('CREATE TABLE IF NOT EXISTS `Company`(`company_id` INT UNSIGNED AUTO_INCREMENT,`company_name` VARCHAR(300) NOT NULL,`category` VARCHAR(100) NOT NULL DEFAULT "un",`entity_id` INT UNSIGNED NULL,`address_line1` VARCHAR(100) NULL,`address_line2` VARCHAR(100) NULL,`address_line3` VARCHAR(100) NULL,`sub` VARCHAR(25) NULL,`state` VARCHAR(10) NULL,`postcode` VARCHAR(10) NOT NULL,`lat`  VARCHAR(30) NULL,`lng`  VARCHAR(30) NULL, `phone` VARCHAR(200) NULL, `fax` VARCHAR(200) NULL, `website` VARCHAR(300) NULL, `email` VARCHAR(200) NULL, `reg_number` VARCHAR(100) NULL,`contact_person` VARCHAR(100) NULL,`key_project` text NULL, `award` text NULL, `comment` text NULL,`modify_time` datetime Not NULL, `delete_time` datetime NULL, PRIMARY KEY ( `company_id` ),FOREIGN KEY (`entity_id`) REFERENCES `Entity` (`entity_id`) ON UPDATE CASCADE ON DELETE RESTRICT,INDEX (`company_name`) ) ENGINE=INNODB DEFAULT CHARSET=utf8;')
+    db.commit('CREATE TABLE IF NOT EXISTS `People`(`people_id` INT UNSIGNED AUTO_INCREMENT,`full_name` VARCHAR(100) NOT NULL, `family_name` VARCHAR(50) NOT NULL, `last_name` VARCHAR(50) NOT NULL,`entity_id` INT UNSIGNED,`position` VARCHAR(200) NULL,`phone` VARCHAR(200) NULL, `email` VARCHAR(300) NULL, `comment` text NULL,  `modify_time` DATETIME NOT NULL,`delete_time` DATETIME NULL, PRIMARY KEY ( `people_id` ), FOREIGN KEY (`entity_id`) REFERENCES `Entity` (`entity_id`) ON UPDATE CASCADE ON DELETE RESTRICT,INDEX (`full_name`) ) ENGINE=INNODB DEFAULT CHARSET=utf8;')
+    db.commit('show tables')
+    for i in db.cursor.fetchall():
+        print(i)
 
     company = read_excel(file,default,heads,address,comments,start_line,db)
     print(str(company[0]-start_line)+' data have been read. '+str(company[1])+' of them have been insert.'+str(company[2])+' of them have been updated.'+str(company[3]-1)+' of them are unknow data.')

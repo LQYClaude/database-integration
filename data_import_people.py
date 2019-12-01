@@ -32,8 +32,8 @@ class sqlpool():
         self.conn = pymysql.connect(user=user, 
                                     password=password,
                                     host=host,
-                                    database=database)
-                                     #ssl={'ssl': {'ca': '/var/www/html/BaltimoreCyberTrustRoot.crt.pem'}}
+                                    database=database,
+                                    ssl={'ssl': {'ca': '/var/www/html/BaltimoreCyberTrustRoot.crt.pem'}})
         self.cursor = self.conn.cursor()
         self.saved_name = {}
         self.saved_entity = {}
@@ -154,6 +154,8 @@ def read_excel(file,default,heads,comments,first_line,db):
         for c in range(1, col_num+1):
             if sheet1.cell(r, c).value is None:
                 sheet1.cell(r, c, '')
+            #else:
+                #sheet1.cell(r, c).value.replace('\\','').replace('"',"'")
 
     #recognize heads
     i=1
@@ -200,33 +202,33 @@ def read_excel(file,default,heads,comments,first_line,db):
         print('Row '+str(r))
         detail = copy.copy(default)
         if heads[3] > 0 and str(sheet1.cell(r,heads[3]).value).strip()!='':
-            detail[0] = str(sheet1.cell(r,heads[3]).value).replace('"','').strip()
+            detail[0] = str(sheet1.cell(r,heads[3]).value).strip()
         if heads[2] > 0 and str(sheet1.cell(r,heads[2]).value).strip()!='' :
-            detail[2] = str(sheet1.cell(r,heads[2]).value).replace('"','').strip()
+            detail[2] = str(sheet1.cell(r,heads[2]).value).strip()
         if heads[0] > 0 and str(sheet1.cell(r,heads[0]).value).strip()!='' :
             if heads[1] > 0:
-                detail[1] = str(sheet1.cell(r,heads[0]).value).replace('"','').strip()+' '+str(sheet1.cell(r,heads[1]).value).replace('"','').strip()
+                detail[1] = str(sheet1.cell(r,heads[0]).value).strip()+' '+str(sheet1.cell(r,heads[1]).value).strip()
             else:
-                detail[1] = str(sheet1.cell(r,heads[0]).value).replace('"','').strip()
+                detail[1] = str(sheet1.cell(r,heads[0]).value).strip()
         if detail[0] != None or (detail[1]!=None and detail[2]!=None):
             if heads[4] > 0 and str(sheet1.cell(r,heads[4]).value).strip()!='':
                 if str(sheet1.cell(r,heads[4]).value).lower().find('pty') != -1:
-                    detail[3] = str(sheet1.cell(r,heads[4]).value)[0:str(sheet1.cell(r,heads[4]).value).lower().find('pty')].replace('"','').strip()+' PTY LTD'
+                    detail[3] = str(sheet1.cell(r,heads[4]).value)[0:str(sheet1.cell(r,heads[4]).value).lower().find('pty')].strip()+' PTY LTD'
                 elif str(sheet1.cell(r,heads[0]).value).lower().find('p/l') != -1:
-                    detail[3] = str(sheet1.cell(r,heads[4]).value)[0:str(sheet1.cell(r,heads[4]).value).lower().find('p/')].replace('"','').strip()
+                    detail[3] = str(sheet1.cell(r,heads[4]).value)[0:str(sheet1.cell(r,heads[4]).value).lower().find('p/')].strip()
                 else:
-                    detail[3] = str(sheet1.cell(r,heads[4]).value).replace('"','').strip()+' PTY LTD'
+                    detail[3] = str(sheet1.cell(r,heads[4]).value).strip()+' PTY LTD'
             if heads[5] > 0 and str(sheet1.cell(r,heads[5]).value).strip()!='':
-                detail[4] = str(sheet1.cell(r,heads[5]).value).replace('"','').strip()
+                detail[4] = str(sheet1.cell(r,heads[5]).value).strip()
             if heads[6] > 0 and str(sheet1.cell(r,heads[6]).value).strip()!='':
-                detail[5] = str(sheet1.cell(r,heads[6]).value).strip().split(',')[0].split('/')[0].replace('"','')
+                detail[5] = str(sheet1.cell(r,heads[6]).value).strip().split(',')[0].split('/')[0]
             if heads[7] > 0 and str(sheet1.cell(r,heads[7]).value).strip()!='':
-                detail[6] = str(sheet1.cell(r,heads[7]).value).strip().split(',')[0].split('/')[0].replace('"','')
+                detail[6] = str(sheet1.cell(r,heads[7]).value).strip().split(',')[0].split('/')[0]
             if heads[8] > 0:
                 comment=''
                 for com in comments:
                     if str(sheet1.cell(r,com).value).strip() != '': comment+=' '+str(sheet1.cell(1,com).value).strip()+': '+str(sheet1.cell(r,com).value).strip()+' ---'
-                detail[7] = comment.replace('"','').strip()
+                detail[7] = comment.strip()
             if detail[0] != None and (detail[1]==None or detail[2]==None):
                 detail[2] = detail[0].split(' ')[-1]
                 detail[1] = detail[0].replace(detail[2], '').strip()
@@ -300,8 +302,7 @@ if __name__=='__main__':
     start = time.time()
 
     #set default data
-    #file = 'D:\excel\people data.xlsx'
-    file = 'D:\excel\BuilderFromMbansw 2019-11-20 page 178.xlsx'
+    file = 
     default = [None # 'full_name'
                ,None # 'family_name'
                ,None # 'last_name'
@@ -323,10 +324,10 @@ if __name__=='__main__':
     comments = [] # Set useful comment col
     start_line = 2
 
-    user='root'
-    password='claude@1698774'
-    host='localhost'
-    database='[your database]'
+    user='root'# 
+    password=
+    host='localhost'# 
+    database=
 
     try:
         db = sqlpool(user,password,host,database)
